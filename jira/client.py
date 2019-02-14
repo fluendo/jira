@@ -62,6 +62,7 @@ from jira.resources import Dashboard
 from jira.resources import Filter
 from jira.resources import GreenHopperResource
 from jira.resources import Issue
+from jira.resources import Properties
 from jira.resources import IssueLink
 from jira.resources import IssueLinkType
 from jira.resources import IssueType
@@ -1201,8 +1202,17 @@ class JIRA(object):
         self._session.delete(url, params=x)
         return True
 
-    # Issues
+    def properties(self, id):
+        """ Get the properties of an issue """
 
+        # must be an instance of an Issue
+        if not isinstance(id, Issue):
+            return None
+
+        properties = Properties(self._options, self._session)
+        return properties
+
+    # Issues
     def issue(self, id, fields=None, expand=None):
         """Get an issue Resource from the server.
 
@@ -1508,6 +1518,52 @@ class JIRA(object):
             url, data=json.dumps(payload))
         raise_on_error(r)
         return True
+
+    @translate_resource_args
+    def issue_properties(self, issue):
+        """Get a list of Properties Resources.
+
+        :param issue: the issue to get key properties from
+        :type issue: str
+        :rtype: List[Properties]
+        """
+        r_json = self._get_json('issue/' + str(issue) + '/properties')
+
+        properties = [Properties(self._options, self._session, raw_properties_json)
+                    for raw_properties_json in r_json['keys']]
+        return properties
+
+    @translate_resource_args
+    def issue_property(self, issue, key_property):
+        """Get a property Resource from the server for the specified ID.
+
+        :param issue: ID or key of the issue to get the comment from
+        :param key_property: key of the proerty to get
+        """
+        return self._find_for_resource(Properties, (issue, key_property))
+
+    @translate_resource_args
+    def add_issue_property(self, issue, key_property, data={}):
+        """Add a property from the current authenticated user on the specified issue and return a Resource for it.
+
+        The issue identifier and comment body are required.
+
+        :param issue: ID or key of the issue to add the comment to
+        :type issue: str
+        :param data: the property to add
+        :type body: {}
+        :rtype: Property
+
+        """
+        url = self._get_url(
+                'issue/' + str(issue) +\
+                '/properties/' + str(key_property))
+        r = self._session.put(
+            url, data=json.dumps(data)
+        )
+
+        iproperty = Properties(self._options, self._session, raw=json_loads(r))
+        return iproperty
 
     @translate_resource_args
     def comments(self, issue):

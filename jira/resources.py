@@ -54,6 +54,7 @@ __all__ = (
     'Customer',
     'ServiceDesk',
     'RequestType',
+    'Properties',
 )
 
 logging.getLogger('jira').addHandler(NullHandler())
@@ -117,7 +118,7 @@ class Resource(object):
     # A prioritized list of the keys in self.raw most likely to contain a human
     # readable name or identifier, or that offer other key information.
     _READABLE_IDS = ('displayName', 'key', 'name', 'filename', 'value',
-                     'scope', 'votes', 'id', 'mimeType', 'closed')
+                     'scope', 'votes', 'id', 'mimeType', 'closed',)
 
     def __init__(self, resource, options, session, base_url=JIRA_BASE_URL):
         """Initializes a generic resource.
@@ -217,15 +218,13 @@ class Resource(object):
 
     def find(self,
              id,
-             params=None,
-             ):
+             params=None,):
         """Finds a resource based on the input parameters.
 
         :type id: Union[Tuple[str, str], int, str]
         :type params: Optional[Dict[str, str]]
 
         """
-
         if params is None:
             params = {}
 
@@ -822,6 +821,22 @@ class Status(Resource):
             self._parse_raw(raw)
 
 
+class Properties(Resource):
+    """Properties of an issue."""
+
+    def __init__(self, options, session, raw=None):
+        Resource.__init__(self, 'issue/{0}/properties/{1}', options, session)
+        if raw:
+            self._parse_raw(raw)
+
+    def find(self, id, params=None):
+        super(Properties, self).find(id, params)
+        pass
+
+    def update(self, fields=None, async_=None, jira=None, data={}):
+        super(Properties, self).update(data)
+
+
 class StatusCategory(Resource):
     """StatusCategory for an issue."""
 
@@ -1042,6 +1057,7 @@ resource_class_map = {
     r'issue/[^/]+$': Issue,
     r'issue/[^/]+/comment/[^/]+$': Comment,
     r'issue/[^/]+/votes$': Votes,
+    r'issue/[^/]+/properties/[^/]+$': Properties,
     r'issue/[^/]+/watchers$': Watchers,
     r'issue/[^/]+/worklog/[^/]+$': Worklog,
     r'issueLink/[^/]+$': IssueLink,
