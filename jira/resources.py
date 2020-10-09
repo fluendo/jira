@@ -50,6 +50,7 @@ __all__ = (
     'User',
     'Group',
     'CustomFieldOption',
+    'CustomFieldOptionApp',
     'RemoteLink',
     'Customer',
     'ServiceDesk',
@@ -453,6 +454,18 @@ class CustomFieldOption(Resource):
         Resource.__init__(self, 'customFieldOption/{0}', options, session)
         if raw:
             self._parse_raw(raw)
+
+
+class CustomFieldOptionApp(Resource):
+    """An existing option for a custom issue field (apps)."""
+
+    def __init__(self, field, options, session, raw=None):
+        self.self = None
+        self.field = field
+        Resource.__init__(self, 'field/{0}/option/{1}', options, session)
+        if raw:
+            self._parse_raw(raw)
+            self.self = self._get_url('field/{0}/option/{1}'.format(self.field, raw['id']))
 
 
 class Dashboard(Resource):
@@ -1055,6 +1068,7 @@ resource_class_map = {
     r'attachment/[^/]+$': Attachment,
     r'component/[^/]+$': Component,
     r'customFieldOption/[^/]+$': CustomFieldOption,
+    r'field/[^/]+/option/[^/]+$': CustomFieldOptionApp,
     r'dashboard/[^/]+$': Dashboard,
     r'filter/[^/]$': Filter,
     r'issue/[^/]+$': Issue,

@@ -57,6 +57,7 @@ from jira.resources import Comment
 from jira.resources import Component
 from jira.resources import Customer
 from jira.resources import CustomFieldOption
+from jira.resources import CustomFieldOptionApp
 from jira.resources import Dashboard
 from jira.resources import Filter
 from jira.resources import GreenHopperResource
@@ -984,6 +985,37 @@ class JIRA(object):
         :rtype: CustomFieldOption
         """
         return self._find_for_resource(CustomFieldOption, id)
+
+    # Custom field options (apps)
+
+    def custom_field_options_app(self, field):
+        """Get a list of custom field options (apps) Resources present on a field.
+
+        :param field: key of the field in the form app_key__key
+        :type field: str
+        :rtype: List[CustomFieldOptionApp]
+        """
+        r_json = self._get_json('field/' + field + '/option')
+        options = [
+            CustomFieldOptionApp(field, self._options, self._session, raw_op_json) for raw_op_json in r_json['values']]
+        return options
+
+    def create_custom_field_option_app(self, field, value, properties):
+        """Create a new custom field option Resource for a specific application field
+
+        :param field: key of the field in the form app_key__key
+        :type field: str
+        :rtype: CustomFieldOptionApp
+        """
+        data = { 'value': value }
+        if properties is not None:
+            data['properties'] = properties
+        url = self._get_url('field/' + field + '/option')
+        r = self._session.post(
+            url, data=json.dumps(data))
+
+        raw_filter_json = json_loads(r)
+        return CustomFieldOptionApp(field, self._options, self._session, raw=raw_filter_json)
 
     # Dashboards
 
