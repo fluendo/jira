@@ -921,15 +921,6 @@ class Version(Resource):
         return self.id == other.id and self.name == other.name
 
 
-class IssueProperties(Resource):
-    """A property of an issue."""
-
-    def __init__(self, options, session, raw=None):
-        Resource.__init__(self, 'issue/{0}/properties', options, session)
-        if raw:
-            self._parse_raw(raw)
-
-
 class IssueProperty(Resource):
 
     def __init__(self, options, session, raw=None):
