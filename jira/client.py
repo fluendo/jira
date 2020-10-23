@@ -1924,6 +1924,19 @@ class JIRA(object):
         return self._find_for_resource(IssueProperty, (issue, id))
 
     @translate_resource_args
+    def add_issue_property(self, issue, property, data):
+        """Add or update a specific issue property Resource 
+        :param issue: ID or key of the issue to set the property to
+        :param id: ID of the property to set
+        :param data: The data to set for the property
+        :rtype: Response
+        """
+
+        url = self._get_url('issue/' + issue + '/properties/' + property)
+        return self._session.put(
+            url, data=json.dumps(data))
+
+    @translate_resource_args
     def worklogs(self, issue):
         """Get a list of worklog Resources from the server for an issue.
 
