@@ -57,6 +57,7 @@ from jira.resources import Comment
 from jira.resources import Component
 from jira.resources import Customer
 from jira.resources import CustomFieldOption
+from jira.resources import CustomFieldOptionApp
 from jira.resources import Dashboard
 from jira.resources import Filter
 from jira.resources import GreenHopperResource
@@ -82,6 +83,7 @@ from jira.resources import Version
 from jira.resources import Votes
 from jira.resources import Watchers
 from jira.resources import Worklog
+from jira.resources import IssueProperty
 
 from jira import __version__
 from jira.utils import CaseInsensitiveDict
@@ -984,6 +986,37 @@ class JIRA(object):
         """
         return self._find_for_resource(CustomFieldOption, id)
 
+    # Custom field options (apps)
+
+    def custom_field_options_app(self, field):
+        """Get a list of custom field options (apps) Resources present on a field.
+
+        :param field: key of the field in the form app_key__key
+        :type field: str
+        :rtype: List[CustomFieldOptionApp]
+        """
+        r_json = self._get_json('field/' + field + '/option')
+        options = [
+            CustomFieldOptionApp(field, self._options, self._session, raw_op_json) for raw_op_json in r_json['values']]
+        return options
+
+    def create_custom_field_option_app(self, field, value, properties):
+        """Create a new custom field option Resource for a specific application field
+
+        :param field: key of the field in the form app_key__key
+        :type field: str
+        :rtype: CustomFieldOptionApp
+        """
+        data = { 'value': value }
+        if properties is not None:
+            data['properties'] = properties
+        url = self._get_url('field/' + field + '/option')
+        r = self._session.post(
+            url, data=json.dumps(data))
+
+        raw_filter_json = json_loads(r)
+        return CustomFieldOptionApp(field, self._options, self._session, raw=raw_filter_json)
+
     # Dashboards
 
     def dashboards(self, filter=None, startAt=0, maxResults=20):
@@ -1867,6 +1900,41 @@ class JIRA(object):
         params = {'username': watcher}
         result = self._session.delete(url, params=params)
         return result
+
+    @translate_resource_args
+    def issue_properties(self, issue):
+        """Get a list of issue property Resource from the server for an issue.
+
+        :param issue: ID or key of the issue to get properties from
+        :rtype: List[IssueProperty]
+        """
+        r_json = self._get_json('issue/' + str(issue) + '/properties')
+        properties = [self.issue_property(issue, key['key'])
+                      for key in r_json['keys']]
+        return properties
+
+    @translate_resource_args
+    def issue_property(self, issue, id):
+        """Get a specific issue property Resource from the server.
+
+        :param issue: ID or key of the issue to get the property from
+        :param id: ID of the property to get
+        :rtype: IssueProperty
+        """
+        return self._find_for_resource(IssueProperty, (issue, id))
+
+    @translate_resource_args
+    def add_issue_property(self, issue, property, data):
+        """Add or update a specific issue property Resource 
+        :param issue: ID or key of the issue to set the property to
+        :param id: ID of the property to set
+        :param data: The data to set for the property
+        :rtype: Response
+        """
+
+        url = self._get_url('issue/' + issue + '/properties/' + property)
+        return self._session.put(
+            url, data=json.dumps(data))
 
     @translate_resource_args
     def worklogs(self, issue):
