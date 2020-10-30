@@ -477,6 +477,20 @@ class Dashboard(Resource):
             self._parse_raw(raw)
 
 
+class DashboardItemProperty(Resource):
+    """A JIRA dashboard item property."""
+    PATH = 'dashboard/{0}/items/{1}/properties/{2}'
+
+    def __init__(self, options, session, raw=None):
+        Resource.__init__(self, self.PATH, options, session)
+        if raw:
+            self._parse_raw(raw)
+
+    def find(self, id, params=None):
+        Resource.find(self, id, params)
+        self.self = self._get_url(self.PATH.format(*id))
+
+
 class Filter(Resource):
     """An issue navigator filter."""
 
@@ -1082,6 +1096,7 @@ resource_class_map = {
     r'customFieldOption/[^/]+$': CustomFieldOption,
     r'field/[^/]+/option/[^/]+$': CustomFieldOptionApp,
     r'dashboard/[^/]+$': Dashboard,
+    r'dashboard/[^/]+/item/[^/]+/properties/[^/]+$': DashboardItemProperty,
     r'filter/[^/]$': Filter,
     r'issue/[^/]+$': Issue,
     r'issue/[^/]+/comment/[^/]+$': Comment,

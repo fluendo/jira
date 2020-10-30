@@ -61,6 +61,7 @@ from jira.resources import Customer
 from jira.resources import CustomFieldOption
 from jira.resources import CustomFieldOptionApp
 from jira.resources import Dashboard
+from jira.resources import DashboardItemProperty
 from jira.resources import Filter
 from jira.resources import GreenHopperResource
 from jira.resources import Issue
@@ -1078,6 +1079,20 @@ class JIRA(object):
         :rtype: Dashboard
         """
         return self._find_for_resource(Dashboard, id)
+
+    # Dashboard item property
+    def dashboard_item_property(self, dashboard_id, item_id, key):
+        """Get a dashboard item property Resource from the server.
+
+        :param dashboard_id: ID of the dashboard to get the item property from.
+        :type dashboard_id: str
+        :param item_id: ID of the dashboard item to get the property from.
+        :type item_id: str
+        :param key: The property key.
+        :type key: str
+        :rtype: DashboardItemProperty
+        """
+        return self._find_for_resource(DashboardItemProperty, (dashboard_id, item_id, key))
 
     # Fields
 
