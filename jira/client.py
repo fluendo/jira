@@ -1010,6 +1010,10 @@ class JIRA(object):
 
         :param field: key of the field in the form app_key__key
         :type field: str
+        :param value: The option's name, which is displayed in Jira.
+        :type value: str
+        :param property: The property value
+        :type property: object
         :rtype: CustomFieldOptionApp
         """
         data = { 'value': value }
