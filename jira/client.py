@@ -51,7 +51,9 @@ from jira.exceptions import JIRAError
 from jira.resilientsession import raise_on_error
 from jira.resilientsession import ResilientSession
 # JIRA specific resources
+from jira.resources import AppProperty
 from jira.resources import Attachment
+from jira.resources import AtlassianConnectResource
 from jira.resources import Board
 from jira.resources import Comment
 from jira.resources import Component
@@ -286,6 +288,7 @@ class JIRA(object):
         * rest_api_version -- the version of the REST resources under rest_path to use. Defaults to ``2``.
         * agile_rest_path - the REST path to use for JIRA Agile requests. Defaults to ``greenhopper`` (old, private
                 API). Check `GreenHopperResource` for other supported values.
+        * ace_rest_api_version -- the version of the REST resource to use for Jira Atlassian Connect: "1",
         * verify -- Verify SSL certs. Defaults to ``True``.
         * client_cert -- a tuple of (cert,key) for the requests library for client side SSL
         * check_update -- Check whether using the newest python-jira library version.
@@ -335,6 +338,7 @@ class JIRA(object):
         "rest_api_version": "2",
         "agile_rest_path": GreenHopperResource.GREENHOPPER_REST_PATH,
         "agile_rest_api_version": "1.0",
+        "ace_rest_api_version": "1",
         "verify": True,
         "resilient": True,
         "async": False,
@@ -1016,6 +1020,35 @@ class JIRA(object):
 
         raw_filter_json = json_loads(r)
         return CustomFieldOptionApp(field, self._options, self._session, raw=raw_filter_json)
+
+    # App properties
+
+    def app_properties(self, addon_key):
+        """Get a list of app properties.
+
+        :param addon_key: The key of the app, as defined in its descriptor
+        :type field: str
+        :rtype: List[AppProperty]
+        """
+        r_json = self._get_json('addons/' + addon_key + '/properties', base=AtlassianConnectResource.ACE_BASE_URL)
+        properties = [
+            AppProperty(self._options, self._session, json_loads(self._session.get(raw_ap_json['self']))) for raw_ap_json in r_json['keys']]
+        return properties
+
+    def create_app_property(self, addon_key, property_key, data):
+        """Create a new app property.
+
+        :param addon_key: The key of the app, as defined in its descriptor
+        :type addon_key: str
+        :param property_key: The key of the property
+        :type property_key: str
+        :param data: The property value
+        :type data: object
+        :rtype: Response
+        """
+        url = self._get_url('addons/' + addon_key + '/properties/' + property_key, base=AtlassianConnectResource.ACE_BASE_URL)
+        return self._session.put(
+            url, data=json.dumps(data))
 
     # Dashboards
 
