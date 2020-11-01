@@ -51,7 +51,9 @@ from jira.exceptions import JIRAError
 from jira.resilientsession import raise_on_error
 from jira.resilientsession import ResilientSession
 # JIRA specific resources
+from jira.resources import AppProperty
 from jira.resources import Attachment
+from jira.resources import AtlassianConnectResource
 from jira.resources import Board
 from jira.resources import Comment
 from jira.resources import Component
@@ -59,6 +61,7 @@ from jira.resources import Customer
 from jira.resources import CustomFieldOption
 from jira.resources import CustomFieldOptionApp
 from jira.resources import Dashboard
+from jira.resources import DashboardItemProperty
 from jira.resources import Filter
 from jira.resources import GreenHopperResource
 from jira.resources import Issue
@@ -286,6 +289,7 @@ class JIRA(object):
         * rest_api_version -- the version of the REST resources under rest_path to use. Defaults to ``2``.
         * agile_rest_path - the REST path to use for JIRA Agile requests. Defaults to ``greenhopper`` (old, private
                 API). Check `GreenHopperResource` for other supported values.
+        * ace_rest_api_version -- the version of the REST resource to use for Jira Atlassian Connect: "1",
         * verify -- Verify SSL certs. Defaults to ``True``.
         * client_cert -- a tuple of (cert,key) for the requests library for client side SSL
         * check_update -- Check whether using the newest python-jira library version.
@@ -335,6 +339,7 @@ class JIRA(object):
         "rest_api_version": "2",
         "agile_rest_path": GreenHopperResource.GREENHOPPER_REST_PATH,
         "agile_rest_api_version": "1.0",
+        "ace_rest_api_version": "1",
         "verify": True,
         "resilient": True,
         "async": False,
@@ -1005,6 +1010,10 @@ class JIRA(object):
 
         :param field: key of the field in the form app_key__key
         :type field: str
+        :param value: The option's name, which is displayed in Jira.
+        :type value: str
+        :param property: The property value
+        :type property: object
         :rtype: CustomFieldOptionApp
         """
         data = { 'value': value }
@@ -1016,6 +1025,35 @@ class JIRA(object):
 
         raw_filter_json = json_loads(r)
         return CustomFieldOptionApp(field, self._options, self._session, raw=raw_filter_json)
+
+    # App properties
+
+    def app_properties(self, addon_key):
+        """Get a list of app properties.
+
+        :param addon_key: The key of the app, as defined in its descriptor
+        :type field: str
+        :rtype: List[AppProperty]
+        """
+        r_json = self._get_json('addons/' + addon_key + '/properties', base=AtlassianConnectResource.ACE_BASE_URL)
+        properties = [
+            AppProperty(self._options, self._session, json_loads(self._session.get(raw_ap_json['self']))) for raw_ap_json in r_json['keys']]
+        return properties
+
+    def create_app_property(self, addon_key, property_key, data):
+        """Create a new app property.
+
+        :param addon_key: The key of the app, as defined in its descriptor
+        :type addon_key: str
+        :param property_key: The key of the property
+        :type property_key: str
+        :param data: The property value
+        :type data: object
+        :rtype: Response
+        """
+        url = self._get_url('addons/' + addon_key + '/properties/' + property_key, base=AtlassianConnectResource.ACE_BASE_URL)
+        return self._session.put(
+            url, data=json.dumps(data))
 
     # Dashboards
 
@@ -1045,6 +1083,20 @@ class JIRA(object):
         :rtype: Dashboard
         """
         return self._find_for_resource(Dashboard, id)
+
+    # Dashboard item property
+    def dashboard_item_property(self, dashboard_id, item_id, key):
+        """Get a dashboard item property Resource from the server.
+
+        :param dashboard_id: ID of the dashboard to get the item property from.
+        :type dashboard_id: str
+        :param item_id: ID of the dashboard item to get the property from.
+        :type item_id: str
+        :param key: The property key.
+        :type key: str
+        :rtype: DashboardItemProperty
+        """
+        return self._find_for_resource(DashboardItemProperty, (dashboard_id, item_id, key))
 
     # Fields
 

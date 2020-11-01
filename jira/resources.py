@@ -477,6 +477,20 @@ class Dashboard(Resource):
             self._parse_raw(raw)
 
 
+class DashboardItemProperty(Resource):
+    """A JIRA dashboard item property."""
+    PATH = 'dashboard/{0}/items/{1}/properties/{2}'
+
+    def __init__(self, options, session, raw=None):
+        Resource.__init__(self, self.PATH, options, session)
+        if raw:
+            self._parse_raw(raw)
+
+    def find(self, id, params=None):
+        Resource.find(self, id, params)
+        self.self = self._get_url(self.PATH.format(*id))
+
+
 class Filter(Resource):
     """An issue navigator filter."""
 
@@ -928,6 +942,27 @@ class IssueProperty(Resource):
         if raw:
             self._parse_raw(raw)
 
+# AtlassianConnect
+
+class AtlassianConnectResource(Resource):
+    """A generic AtlassianConnect resource."""
+
+    ACE_BASE_URL = '{server}/rest/atlassian-connect/{ace_rest_api_version}/{path}'
+
+    def __init__(self, path, options, session, raw):
+        self.self = None
+
+        Resource.__init__(self, path, options, session, self.ACE_BASE_URL)
+        if raw:
+            self._parse_raw(raw)
+
+
+class AppProperty(AtlassianConnectResource):
+    def __init__(self, options, session, raw=None):
+        AtlassianConnectResource.__init__(self, 'addons/{0}/property/{1}', options, session, raw)
+        if raw:
+            self._parse_raw(raw)
+
 # GreenHopper
 
 
@@ -1061,6 +1096,7 @@ resource_class_map = {
     r'customFieldOption/[^/]+$': CustomFieldOption,
     r'field/[^/]+/option/[^/]+$': CustomFieldOptionApp,
     r'dashboard/[^/]+$': Dashboard,
+    r'dashboard/[^/]+/item/[^/]+/properties/[^/]+$': DashboardItemProperty,
     r'filter/[^/]$': Filter,
     r'issue/[^/]+$': Issue,
     r'issue/[^/]+/comment/[^/]+$': Comment,
